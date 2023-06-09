@@ -28,7 +28,7 @@ def tensorFromSentence(vocab, sentence, device, MAX_LEN = 300):
     return torch.tensor(indexes, dtype=torch.long, device=device).view(-1, 1)
 
 
-def preprocess_string(review, vocab, device, MAX_LEN):    
+def preprocess_string(review, vocab, MAX_LEN):    
     review = review.lower()
     # review = review.replace('<[^>]*>','', regex=True)
     # review = review.replace(r'[^a-zA-Z ]','', regex=True)
@@ -37,4 +37,4 @@ def preprocess_string(review, vocab, device, MAX_LEN):
     x = indexesFromSentence(vocab, review)
     x_encode_pad = [[0]*(MAX_LEN-len(x)) + x if len(x)<MAX_LEN else x[0:MAX_LEN]]
 
-    return torch.tensor(x_encode_pad, dtype=torch.long, device=device).view(1, -1)
+    return torch.tensor(x_encode_pad, dtype=torch.long).view(1, -1)
