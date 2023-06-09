@@ -11,17 +11,19 @@ from utils import encode_dataset, preprocess_string
 from dataset import TextDataset
 from model import LSTM
 
-from params import device, dataset_path, MAX_LEN, BATCH_SIZE, HIDDEN_SIZE, NUM_LAYERS, EMBED_DIM, OUTPUT_SIZE, DROP_OUT_P, LR, EPOCHS 
+from params import device, dataset_path, MAX_LEN, BATCH_SIZE, HIDDEN_SIZE, NUM_LAYERS, EMBED_DIM, OUTPUT_SIZE, DROP_OUT_P, LR, EPOCHS, VOCAB_SIZE
 
 def main():
     print('device : ', device)
     print('prepare dataset')
     X_train, y_train, X_test, y_test, X_valid, y_valid = prepare_data(dataset_path)
 
-    print('build vocab')
-    vocab = Vocab()
+    print('build vocab, size : ', VOCAB_SIZE)
+    vocab = Vocab(VOCAB_SIZE)
     for _, row in X_train.iterrows():
         vocab.addSentence(row['review'])
+    vocab.finishAddingWords()
+    vocab.save2file()
 
     print('enocde dataset')
     X_train_encode_pad, X_valid_encode_pad, X_test_encode_pad = encode_dataset(vocab, X_train, X_valid, X_test)
@@ -49,7 +51,7 @@ def main():
     model = LSTM(HIDDEN_SIZE,
                  NUM_LAYERS,
                  EMBED_DIM,
-                 vocab.n_words,
+                 VOCAB_SIZE,
                  OUTPUT_SIZE,
                  device,
                  DROP_OUT_P,).to(device)
