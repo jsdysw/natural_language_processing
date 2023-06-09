@@ -1,32 +1,31 @@
 import torch
 
-from params import MAX_LEN, BATCH_SIZE, HIDDEN_SIZE, NUM_LAYERS, EMBED_DIM, OUTPUT_SIZE, DROP_OUT_P, dataset_path
+from params import MAX_LEN, BATCH_SIZE, HIDDEN_SIZE, NUM_LAYERS, EMBED_DIM, OUTPUT_SIZE, DROP_OUT_P, dataset_path, VOCAB_SIZE
 from model import LSTM
 from prepare_data import prepare_data
 from vocab import Vocab
 from utils import preprocess_string
 
 def main():
-    print('prepare dataset')
-    X_train, _, _, _, _, _ = prepare_data(dataset_path)
+    device = 'cpu'
 
-    print('build vocab')
-    vocab = Vocab()
-    for _, row in X_train.iterrows():
-        vocab.addSentence(row['review'])
-
+    print('load vocab')
+    vocab = Vocab(VOCAB_SIZE)
+    vocab.load_dic_from_file('word2index.txt', 
+                             'index2word.txt', 
+                             'word2count.txt')
 
     print('define model')
     model = LSTM(HIDDEN_SIZE,
                  NUM_LAYERS,
                  EMBED_DIM,
-                 180358,
+                 VOCAB_SIZE,
                  OUTPUT_SIZE,
-                 'cpu',
-                 DROP_OUT_P).to('cpu')
+                 device,
+                 DROP_OUT_P).to(device)
 
 
-    review  = "I hate this movie"
+    review  = "I really liked this movie, I want to watch it again, Story was so good"
     
     print('review : ',  review) 
     
@@ -34,16 +33,17 @@ def main():
     model.load_state_dict(torch.load('./snapshot/imdb_txt_classification.pt'))
     
     print('inference ')
-    result = test_review(model, review, vocab, MAX_LEN)
+    result = test_review(model, review, vocab, device, MAX_LEN)
     print('result : ', result) 
     
 
 
-def test_review(model, review, vocab, MAX_LEN):
+def test_review(model, review, vocab, device, MAX_LEN):
     model.eval()
     threshold = 0.5
     
-    x = preprocess_string(review, vocab, 'cpu', MAX_LEN)
+    x = preprocess_string(review, vocab, MAX_LEN)
+    x.to(device)
     print('x shape ', x.shape)
     h, c = model.init_hidden(1)
     
